@@ -294,6 +294,88 @@ table.grid tr.flash td{animation:flash 1.2s ease-out}
 .toast button{border:0;background:none;color:var(--accent-soft);font-weight:700;padding:4px 6px}
 :root[data-theme="dark"] .toast button{color:var(--accent-ink)}
 
+/* ---------- dashboard v2 ---------- */
+:root{--m-exp:#C23A2C;--m-renew:#5763BE;--m-soon:#DB9A1B;--m-ok:#2E8F5E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--m-exp:#D9523F;--m-renew:#7079D6;--m-soon:#C0892A;--m-ok:#3A9870}}
+:root[data-theme="dark"]{--m-exp:#D9523F;--m-renew:#7079D6;--m-soon:#C0892A;--m-ok:#3A9870}
+.seg .ok{background:var(--m-ok)} .seg .soon{background:var(--m-soon)} .seg .exp{background:var(--m-exp)} .seg .renew{background:var(--m-renew)}
+.dash{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;margin-top:2px}
+.dash-hero{padding:18px;display:grid;gap:14px;align-content:start}
+.hero-top{display:flex;gap:18px;align-items:center}
+.ring{position:relative;width:124px;height:124px;flex:none}
+.ring svg{width:100%;height:100%;display:block}
+.ring circle{fill:none;stroke-width:13}
+.ring .track{stroke:var(--line2)}
+.ring .seg-exp{stroke:var(--m-exp)} .ring .seg-renew{stroke:var(--m-renew)} .ring .seg-soon{stroke:var(--m-soon)} .ring .seg-ok{stroke:var(--m-ok)}
+.ring-c{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1.25;pointer-events:none}
+.ring-c b{font-family:var(--f-display);font-size:25px;color:var(--ink)}
+.ring-c span{font-size:12px;color:var(--ink3)}
+.hero-txt{min-width:0}
+.hero-txt small{color:var(--ink3);font-size:13px}
+.hero-txt h1{font-size:clamp(20px,4.4vw,26px)}
+.hero-sub{margin:2px 0 0;color:var(--ink2);font-size:14px}
+.priority{border-radius:12px;background:var(--sunk);padding:10px 12px;display:grid;gap:6px}
+.priority.exp{background:var(--exp-bg)} .priority.soon{background:var(--soon-bg)} .priority.renew{background:var(--renew-bg)} .priority.ok{background:var(--ok-bg)}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--ink2)}
+.pr-row{display:flex;gap:10px;align-items:center}
+.pr-t{flex:1;min-width:0}
+.pr-t b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-t small{display:block;color:var(--ink2);font-size:12.5px;line-height:1.5}
+.priority .sic{background:var(--surface)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line2);border-radius:16px;padding:12px 14px;text-align:start;display:grid;gap:1px;align-content:start;transition:border-color .15s,box-shadow .15s,background .15s}
+.tile:hover{border-color:var(--line)}
+.tile-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.tile-h b{font-family:var(--f-display);font-size:30px;line-height:1.25;color:var(--ink)}
+.tile-l{font-weight:700;font-size:14.5px}
+.tile small{color:var(--ink3);font-size:12.5px;line-height:1.5}
+.tile[aria-pressed="true"],.bucket[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.horizon{grid-column:1 / -1;padding:14px 16px}
+.hz-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 12px;margin-bottom:10px}
+.hz-head h2{font-size:15.5px}
+.hz-quiet{font-size:13px;color:var(--ink3)}
+.hz-quiet button{border:0;background:none;color:var(--accent);font-weight:600;padding:0}
+.buckets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.bucket{border:1px solid var(--line2);background:var(--surface);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 8px;align-items:end;text-align:start}
+.bucket:hover{background:var(--hover)}
+.bk-l{font-weight:600;font-size:14px;line-height:1.4}
+.bk-l small{display:block;color:var(--ink3);font-weight:400;font-size:12px}
+.bucket b{font-family:var(--f-display);font-size:22px;line-height:1.2}
+.bk-bar{grid-column:1 / -1;height:6px;border-radius:3px;background:var(--line2);overflow:hidden;display:block}
+.bk-bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.home-sec{margin-top:4px}
+.count{display:inline-grid;place-items:center;min-width:26px;height:22px;padding:0 7px;border-radius:11px;background:var(--sunk);color:var(--ink2);font-size:12.5px;font-family:var(--f-body);font-weight:600;vertical-align:.2em;margin-inline-start:4px}
+.lcard .top b{min-width:0}
+.lc-n{font-size:12.5px;color:var(--ink3);white-space:nowrap}
+.lc-foot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:26px}
+.lc-foot small{margin-inline-start:auto}
+.detail{margin-top:22px;overflow:hidden}
+.detail-h{display:flex;align-items:center;gap:8px;padding:6px 8px}
+.detail-toggle{flex:1;display:flex;align-items:center;gap:10px;border:0;background:none;padding:8px 6px;text-align:start;border-radius:10px;min-width:0;flex-wrap:wrap}
+.detail-toggle:hover{background:var(--hover)}
+.detail-toggle h2{font-size:16px}
+.chev{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--sunk);color:var(--ink2);flex:none}
+.chev .ic{width:16px;height:16px;transform:rotate(180deg);transition:transform .2s}
+.detail-toggle[aria-expanded="true"] .chev .ic{transform:rotate(90deg)}
+.detail-peek{font-size:13px}
+@media (max-width:860px){
+  .dash{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:520px){
+  .dash-hero{padding:14px}
+  .hero-top{gap:14px}
+  .ring{width:100px;height:100px}
+  .ring-c b{font-size:21px}
+  .tiles{gap:10px}
+  .tile{padding:10px 12px}
+  .tile-h b{font-size:26px}
+  .horizon{padding:12px}
+  .buckets{gap:8px}
+  .bucket{padding:8px 10px}
+  .bk-l{font-size:13px}
+  .bk-l small{display:none}
+  .bucket b{font-size:20px}
+}
 @media (max-width:760px){
   .counters{grid-template-columns:repeat(2,minmax(0,1fr))}
   .grid-wrap.has-rows table.grid{display:none}
@@ -439,6 +521,7 @@ function blankState() {
     notifications: [],
     emails: [],
     offset: 0,              /* testing: days added to the real date */
+    prefs: { nextOpen: true },
     theme: null
   };
 }
@@ -836,10 +919,43 @@ function recRow(r, cls) {
     '<div class="alert-line">' + esc("") + relText(r) + (al ? " · " + al : "") + "</div>" +
     "</li>";
 }
+var BUCKETS = {
+  b7:  { l: "هذا الأسبوع",  hint: "خلال ٧ أيام",        from: 0,  to: 7 },
+  b30: { l: "خلال الشهر",   hint: "من ٨ إلى ٣٠ يوماً",  from: 8,  to: 30 },
+  b90: { l: "خلال ٣ أشهر",  hint: "من ٣١ إلى ٩٠ يوماً", from: 31, to: 90 }
+};
+var TILE_HINT = { exp: "تجاوزت تاريخ انتهائها", soon: "دخلت فترة التنبيه", renew: "طلبات قيد المتابعة", ok: "لا تحتاج إجراء الآن" };
+function bucketOf(r) {
+  if (r.noExpiry || !r.expiry || (r.renewal && r.renewal.state === "requested")) return null;
+  var d = diffDays(r.expiry, today());
+  for (var k in BUCKETS) if (d >= BUCKETS[k].from && d <= BUCKETS[k].to) return k;
+  return null;
+}
+function matchFilter(r, f) { return BUCKETS[f] ? bucketOf(r) === f : statusOf(r) === f; }
+function filterLabel(f) { return BUCKETS[f] ? "تنتهي " + BUCKETS[f].l : STATUS[f].l; }
+
+function donut(c) {
+  var order = ["exp", "renew", "soon", "ok"];
+  var total = order.reduce(function (s, k) { return s + c[k]; }, 0);
+  var R = 52, C = 2 * Math.PI * R, gap = total > 1 ? 2.5 : 0, pos = 0, segs = "";
+  order.forEach(function (k) {
+    if (!c[k]) return;
+    var len = C * c[k] / total;
+    var draw = Math.max(len - gap, 1.5);
+    segs += '<circle class="seg-' + k + '" cx="64" cy="64" r="' + R + '" stroke-dasharray="' + draw.toFixed(2) + " " + (C - draw).toFixed(2) + '" stroke-dashoffset="' + (-pos).toFixed(2) + '"><title>' + STATUS[k].l + ": " + n(c[k]) + "</title></circle>";
+    pos += len;
+  });
+  var okPct = total ? Math.round(c.ok / total * 100) : 0;
+  return '<div class="ring" role="img" aria-label="' + esc(order.filter(function (k) { return c[k]; }).map(function (k) { return STATUS[k].l + " " + n(c[k]); }).join("، ")) + '">' +
+    '<svg viewBox="0 0 128 128" aria-hidden="true"><circle class="track" cx="64" cy="64" r="' + R + '"></circle><g transform="rotate(-90 64 64)">' + segs + "</g></svg>" +
+    '<div class="ring-c"><b class="num">' + n(okPct) + "٪</b><span>سارية</span></div></div>";
+}
+
 function viewHome() {
   var c = counts(), live = liveRecords();
   var name = S.user.name;
   var attention = c.exp + c.soon + c.renew;
+  var tracked = c.exp + c.soon + c.renew + c.ok;
   var lists = S.lists.filter(function (l) { return !l.deleted && !l.archived; });
   var archived = S.lists.filter(function (l) { return !l.deleted && l.archived; });
   var h = "";
@@ -848,56 +964,102 @@ function viewHome() {
     h += '<div class="hello"><small>مرحباً ' + esc(name) + "</small><h1>لنبدأ أول قائمة</h1></div>";
     h += '<div class="card empty"><h2>أضف أول قائمة لتبدأ التنبيهات</h2><p style="margin:0;max-width:44ch">سمِّ القائمة، مثل «تراخيص المنشأة» أو «الشهادات الصحية للعاملين»، ثم أدخل ما لديك من تراخيص وشهادات ومواعيد.</p>' +
       '<button class="btn" data-act="seed">' + icon("i-fast") + "جرّب ببيانات شركة نموذجية</button></div>";
-  } else {
-    var head = attention ? records(attention) + " " + (attention === 1 ? "يحتاج" : attention === 2 ? "يحتاجان" : "تحتاج") + " انتباهك" : "كل شيء ساري المفعول";
-    h += '<div class="hello"><small>مرحباً ' + esc(name) + " · " + fmtDate(today()) + "</small><h1>" + head + "</h1></div>";
-    h += '<div class="counters" role="group" aria-label="تصفية حسب الحالة">' +
-      ["exp", "soon", "renew", "ok"].map(function (k) {
-        return '<button class="ctr ' + k + '" data-act="filter" data-k="' + k + '" aria-pressed="' + (UI.filter === k) + '"><b>' + n(c[k]) + "</b><span>" + icon(STATUS[k].ic) + STATUS[k].l + "</span></button>";
-      }).join("") + "</div>";
-    if (c.none || c.missing) {
-      h += '<p class="quiet-line">دون تنبيهات: ' + (c.none ? "<span>" + records(c.none) + " لا " + (c.none === 1 ? "ينتهي" : "تنتهي") + "</span>" : "") +
-        (c.missing ? "<span>" + records(c.missing) + " ناقص التاريخ</span>" + '<button data-act="filter" data-k="missing">أكمل التاريخ</button>' : "") + "</p>";
-    }
-    var pool = live.slice();
-    if (UI.filter) pool = pool.filter(function (r) { return statusOf(r) === UI.filter; });
-    else pool = pool.filter(function (r) { var s = statusOf(r); return s !== "none" && s !== "missing"; });
-    pool.sort(bySoonest);
-    var shown = UI.filter ? pool : pool.slice(0, 5);
-    h += '<section class="card" style="margin-top:14px"><div class="panel-h"><h2>' + (UI.filter ? STATUS[UI.filter].l + " (" + n(pool.length) + ")" : "الأقرب انتهاءً") + "</h2>" +
-      (UI.filter ? '<button class="btn ghost sm" data-act="filter" data-k="">عرض الأقرب انتهاءً</button>' : '<span class="muted">من كل القوائم</span>') + "</div>" +
-      (shown.length ? '<ul class="next-list">' + shown.map(function (r) { return recRow(r, "nrow"); }).join("") + "</ul>" : '<div class="empty" style="padding:18px">لا توجد سجلات في هذه الحالة.</div>') +
-      "</section>";
+    h += '<div class="fab-zone"><button class="fab" id="fab-new" data-act="new-list" aria-label="قائمة جديدة">' + icon("i-plus") + '</button><label for="fab-new">قائمة جديدة</label></div>';
+    return h;
   }
 
+  /* ---------- 1. dashboard ---------- */
+  var urgent = live.filter(function (r) { var s = statusOf(r); return s === "exp" || s === "soon" || s === "renew"; }).sort(bySoonest)[0];
+  var nextOk = !urgent ? live.filter(function (r) { return statusOf(r) === "ok"; }).sort(byExpiry)[0] : null;
+  var head = attention ? records(attention) + " " + (attention === 1 ? "يحتاج" : attention === 2 ? "يحتاجان" : "تحتاج") + " انتباهك" : "كل شيء ساري المفعول";
+  var priority = "";
+  if (urgent) {
+    var us = statusOf(urgent);
+    priority = '<div class="priority ' + us + '"><span class="eyebrow">الأولوية الآن</span>' +
+      '<div class="pr-row"><span class="sic ' + us + '">' + icon(STATUS[us].ic) + '</span><div class="pr-t"><b>' + esc(urgent.title) + "</b><small>" + relText(urgent) + "</small></div>" +
+      (us === "renew" ? '<button class="btn sm" data-act="open-rec" data-id="' + urgent.id + '">متابعة</button>' : '<button class="btn sm pri" data-act="renew" data-id="' + urgent.id + '">تم التجديد</button>') + "</div></div>";
+  } else if (nextOk) {
+    priority = '<div class="priority ok"><span class="eyebrow">أقرب انتهاء</span><div class="pr-row"><span class="sic ok">' + icon("i-check") + '</span><div class="pr-t"><b>' + esc(nextOk.title) + "</b><small>" + relText(nextOk) + "</small></div>" +
+      '<button class="btn sm" data-act="open-rec" data-id="' + nextOk.id + '">فتح</button></div></div>';
+  }
+
+  var bc = { b7: 0, b30: 0, b90: 0 };
+  live.forEach(function (r) { var b = bucketOf(r); if (b) bc[b]++; });
+  var bmax = Math.max(1, bc.b7, bc.b30, bc.b90);
+
+  h += '<section class="dash" aria-label="لوحة التحكم">';
+  h += '<div class="dash-hero card">' +
+    '<div class="hero-top">' + donut(c) +
+    '<div class="hero-txt"><small>مرحباً ' + esc(name) + " · " + fmtDate(today()) + "</small><h1>" + head + "</h1>" +
+    '<p class="hero-sub">' + (tracked ? n(c.ok) + " من " + records(tracked) + " سارية" : "لا توجد سجلات بتواريخ بعد") + "</p></div></div>" +
+    priority + "</div>";
+
+  h += '<div class="tiles" role="group" aria-label="تصفية حسب الحالة">' +
+    ["exp", "soon", "renew", "ok"].map(function (k) {
+      return '<button class="tile ' + k + '" data-act="filter" data-k="' + k + '" aria-pressed="' + (UI.filter === k) + '">' +
+        '<span class="tile-h"><span class="sic ' + k + '">' + icon(STATUS[k].ic) + "</span><b class=\"num\">" + n(c[k]) + "</b></span>" +
+        '<span class="tile-l">' + STATUS[k].l + "</span><small>" + TILE_HINT[k] + "</small></button>";
+    }).join("") + "</div>";
+
+  h += '<div class="horizon card"><div class="hz-head"><h2>ما ينتهي قريباً</h2>' +
+    ((c.none || c.missing) ? '<span class="hz-quiet">' + (c.missing ? '<button data-act="filter" data-k="missing">' + records(c.missing) + " ناقص التاريخ</button>" : "") + (c.none && c.missing ? " · " : "") + (c.none ? records(c.none) + " لا " + (c.none === 1 ? "ينتهي" : "تنتهي") : "") + "</span>" : "") + "</div>" +
+    '<div class="buckets">' + ["b7", "b30", "b90"].map(function (k) {
+      var pct = Math.round(bc[k] / bmax * 100);
+      return '<button class="bucket" data-act="filter" data-k="' + k + '" aria-pressed="' + (UI.filter === k) + '" title="' + esc(BUCKETS[k].hint + ": " + records(bc[k])) + '">' +
+        '<span class="bk-l">' + BUCKETS[k].l + '<small>' + BUCKETS[k].hint + '</small></span><b class="num">' + n(bc[k]) + "</b>" +
+        '<span class="bk-bar"><i style="width:' + (bc[k] ? Math.max(pct, 4) : 0) + '%"></i></span></button>';
+    }).join("") + "</div></div>";
+  h += "</section>";
+
+  /* ---------- new list ---------- */
   h += '<div class="fab-zone"><button class="fab" id="fab-new" data-act="new-list" aria-label="قائمة جديدة">' + icon("i-plus") + '</button><label for="fab-new">قائمة جديدة</label></div>';
 
+  /* ---------- 2. lists ---------- */
   if (lists.length) {
-    h += '<section><div class="sec-title"><h2>قوائمك</h2><span class="muted" style="font-size:13px">الأقرب انتهاءً أولاً</span></div><div class="lists">';
+    h += '<section class="home-sec"><div class="sec-title"><h2>قوائمك <span class="count num">' + n(lists.length) + '</span></h2><span class="muted" style="font-size:13px">الأكثر إلحاحاً أولاً</span></div><div class="lists">';
     lists.map(function (l) {
       var rs = listRecords(l.id), cc = { exp: 0, soon: 0, renew: 0, ok: 0, missing: 0, none: 0 }, nearest = null;
-      rs.forEach(function (r) { var s = statusOf(r); cc[s]++; if (r.expiry && !r.noExpiry && (!nearest || r.expiry < nearest)) nearest = r.expiry; });
+      rs.forEach(function (r) { var s = statusOf(r); cc[s]++; if (r.expiry && !r.noExpiry && r.expiry >= today() && (!nearest || r.expiry < nearest)) nearest = r.expiry; });
       return { l: l, rs: rs, cc: cc, nearest: nearest, key: cc.exp ? 0 : cc.renew ? 1 : cc.soon ? 2 : 3 };
     }).sort(function (a, b) { return a.key - b.key || ((a.nearest || "9") < (b.nearest || "9") ? -1 : 1); })
       .forEach(function (x) {
         var segs = ["exp", "renew", "soon", "ok", "missing", "none"].filter(function (k) { return x.cc[k]; })
           .map(function (k) { return '<i class="' + k + '" style="flex:' + x.cc[k] + '"></i>'; }).join("");
         var alt = ["exp", "renew", "soon", "ok"].filter(function (k) { return x.cc[k]; }).map(function (k) { return n(x.cc[k]) + " " + STATUS[k].l; }).join("، ");
-        var sub = x.rs.length ? records(x.rs.length) + (x.cc.exp ? ' · <span style="color:var(--exp)">' + n(x.cc.exp) + " منتهية</span>" : x.nearest ? " · أقرب انتهاء " + fmtDate(x.nearest, true) : "") : "قائمة فارغة";
-        h += '<button class="lcard" data-act="open-list" data-id="' + x.l.id + '"><span class="top"><b>' + esc(x.l.name) + "</b></span>" +
-          '<span class="seg" role="img" aria-label="' + esc(alt || "لا سجلات") + '">' + (segs || "") + "</span><small>" + sub + "</small></button>";
+        var tags = ["exp", "renew", "soon"].filter(function (k) { return x.cc[k]; }).map(function (k) { return '<span class="pill ' + k + '">' + n(x.cc[k]) + " " + STATUS[k].l + "</span>"; }).join("");
+        h += '<button class="lcard" data-act="open-list" data-id="' + x.l.id + '"><span class="top"><b>' + esc(x.l.name) + '</b><span class="lc-n num">' + records(x.rs.length) + "</span></span>" +
+          '<span class="seg" role="img" aria-label="' + esc(alt || "لا سجلات") + '">' + segs + "</span>" +
+          '<span class="lc-foot">' + (tags || '<span class="pill ok">' + icon("i-check") + "كلها سارية</span>") +
+          (x.nearest ? '<small>أقرب انتهاء ' + fmtDate(x.nearest, true) + "</small>" : "") + "</span></button>";
       });
-    h += "</div></section>";
-  }
-  if (archived.length) {
-    h += '<div class="archived-toggle"><button class="btn ghost sm" data-act="toggle-archived">' + (UI.showArchived ? "إخفاء" : "عرض") + " القوائم المؤرشفة (" + n(archived.length) + ")</button></div>";
-    if (UI.showArchived) {
-      h += '<div class="lists" style="margin-top:10px">' + archived.map(function (l) {
-        return '<div class="lcard" style="cursor:default"><span class="top"><b>' + esc(l.name) + '</b><span class="pill none">مؤرشفة</span></span><small>' + records(listRecords(l.id).length) + " · تنبيهاتها متوقفة</small>" +
-          '<span><button class="btn sm" data-act="unarchive" data-id="' + l.id + '">إلغاء الأرشفة</button></span></div>';
-      }).join("") + "</div>";
+    h += "</div>";
+    if (archived.length) {
+      h += '<div class="archived-toggle"><button class="btn ghost sm" data-act="toggle-archived">' + (UI.showArchived ? "إخفاء" : "عرض") + " القوائم المؤرشفة (" + n(archived.length) + ")</button></div>";
+      if (UI.showArchived) {
+        h += '<div class="lists" style="margin-top:10px">' + archived.map(function (l) {
+          return '<div class="lcard" style="cursor:default"><span class="top"><b>' + esc(l.name) + '</b><span class="pill none">مؤرشفة</span></span><small>' + records(listRecords(l.id).length) + " · تنبيهاتها متوقفة</small>" +
+            '<span><button class="btn sm" data-act="unarchive" data-id="' + l.id + '">إلغاء الأرشفة</button></span></div>';
+        }).join("") + "</div>";
+      }
     }
+    h += "</section>";
   }
+
+  /* ---------- 3. detail list (collapsible) ---------- */
+  var pool = live.slice();
+  if (UI.filter) pool = pool.filter(function (r) { return matchFilter(r, UI.filter); });
+  else pool = pool.filter(function (r) { var s = statusOf(r); return s === "exp" || s === "soon" || s === "renew"; });
+  pool.sort(bySoonest);
+  var open = UI.filter ? true : S.prefs.nextOpen !== false;
+  var title = UI.filter ? filterLabel(UI.filter) : "تحتاج انتباهك";
+  h += '<section class="home-sec card detail" id="detail">' +
+    '<div class="detail-h"><button class="detail-toggle" data-act="toggle-detail" aria-expanded="' + open + '" aria-controls="detail-body">' +
+    '<span class="chev">' + icon("i-back") + "</span><h2>" + title + ' <span class="count num">' + n(pool.length) + "</span></h2>" +
+    (open ? "" : '<span class="muted detail-peek">' + (pool.length ? "اضغط لعرض التفاصيل" : "لا شيء هنا") + "</span>") + "</button>" +
+    (UI.filter ? '<button class="btn ghost sm" data-act="filter" data-k="">إلغاء التصفية</button>' : "") + "</div>" +
+    '<div id="detail-body"' + (open ? "" : " hidden") + ">" +
+    (pool.length ? '<ul class="next-list">' + pool.map(function (r) { return recRow(r, "nrow"); }).join("") + "</ul>" : '<div class="empty" style="padding:18px">لا توجد سجلات هنا.</div>') +
+    "</div></section>";
   return h;
 }
 </script>
@@ -1446,7 +1608,17 @@ var ACTIONS = {
   home: function () { UI.search = ""; go("#/"); },
   "open-list": function (el) { UI.search = ""; go("#/list/" + el.getAttribute("data-id")); },
   "open-rec": function (el) { openRecord(el.getAttribute("data-id")); },
-  filter: function (el) { var k = el.getAttribute("data-k") || null; UI.filter = UI.filter === k ? null : k; rerender(); },
+  filter: function (el) {
+    var k = el.getAttribute("data-k") || null;
+    UI.filter = UI.filter === k ? null : k;
+    rerender();
+    if (UI.filter) { var dt = $("#detail"); if (dt && dt.scrollIntoView) dt.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  },
+  "toggle-detail": function (el) {
+    var open = el.getAttribute("aria-expanded") === "true";
+    if (open && UI.filter) UI.filter = null;
+    S.prefs = S.prefs || {}; S.prefs.nextOpen = !open; save(); rerender();
+  },
   notifs: openNotifs,
   menu: openMenu,
   close: function () {
