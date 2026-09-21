@@ -206,7 +206,7 @@ main{max-width:1120px;margin:0 auto;padding:18px 16px calc(40px + var(--bot))}
 .search .ic{position:absolute;top:50%;inset-inline-start:12px;transform:translateY(-50%);color:var(--ink3)}
 .search input{padding-inline-start:38px;min-height:42px}
 .grid-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line2);border-radius:14px}
-table.grid{border-collapse:collapse;width:100%;min-width:980px;font-size:14px}
+table.grid{border-collapse:collapse;width:100%;min-width:1120px;font-size:14px}
 table.grid th{position:sticky;top:0;background:var(--sunk);color:var(--ink2);font-weight:600;font-size:12.5px;text-align:start;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 table.grid td{border-bottom:1px solid var(--line2);border-inline-start:1px solid var(--line2);padding:0;vertical-align:middle}
 table.grid td:first-child{border-inline-start:0}
@@ -218,7 +218,7 @@ table.grid input::placeholder{color:var(--ph);font-style:italic;opacity:1}
 table.grid td.st{padding:4px 8px;white-space:nowrap}
 table.grid td.act{width:44px;text-align:center}
 table.grid .c-title{min-width:190px} table.grid .c-type{width:104px} table.grid .c-issuer{min-width:150px}
-table.grid .c-ref{width:124px} table.grid .c-date{width:150px} table.grid .c-note{min-width:230px}
+table.grid .c-ref{width:124px} table.grid .c-doc{width:150px} table.grid .c-date{width:150px} table.grid .c-note{min-width:230px}
 table.grid tr.flash td{animation:flash 1.2s ease-out}
 @keyframes flash{from{background:var(--accent-soft)}to{background:transparent}}
 .grid-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--line2);font-size:13px;color:var(--ink3)}
@@ -751,6 +751,7 @@ function seedSample() {
   function R(listId, o) {
     var r = { id: uid("r"), listId: listId, type: o.type || "license", title: o.title, issuer: o.issuer || "", ref: o.ref || "",
       expiry: o.d == null ? null : addDays(t, o.d), noExpiry: !!o.noExpiry, note: o.note || "",
+      docDate: o.doc === false ? null : (o.d == null ? (o.noExpiry ? addDays(t, -2100) : null) : addDays(t, o.d - (o.span || 365))),
       renewal: { state: "none" }, override: null, snoozes: [], alertLog: [], history: [], setOn: setOn, createdAt: setOn, updatedAt: setOn };
     if (o.requested) r.renewal = { state: "requested", requestedAt: addDays(t, o.requested), followup: addDays(t, o.followup) };
     S.records.push(r); return r;
@@ -770,8 +771,8 @@ function seedSample() {
     .forEach(function (w, i) { R(b, { type: "cert", title: "شهادة صحية: " + w[0], issuer: "البلدية", ref: "HC-" + (40211 + i * 37), d: w[1] }); });
 
   var c = L("الجودة والاعتمادات");
-  R(c, { type: "cert", title: "شهادة ISO 9001:2015", issuer: "جهة منح معتمدة", ref: "QMS-22817", d: -6, requested: -8, followup: 6, note: "الارتباط: شرط في مناقصة التوريد الحكومية · المسؤول: مدير الجودة" });
-  R(c, { type: "cert", title: "شهادة ISO 45001", issuer: "جهة منح معتمدة", ref: "OHS-11903", d: 290 });
+  R(c, { type: "cert", title: "شهادة ISO 9001:2015", issuer: "جهة منح معتمدة", ref: "QMS-22817", d: -6, span: 1095, requested: -8, followup: 6, note: "الارتباط: شرط في مناقصة التوريد الحكومية · المسؤول: مدير الجودة" });
+  R(c, { type: "cert", title: "شهادة ISO 45001", issuer: "جهة منح معتمدة", ref: "OHS-11903", d: 290, span: 1095 });
   R(c, { type: "accred", title: "اعتماد مختبر الفحص", issuer: "المركز الوطني للاعتماد", ref: "LAB-0457", d: 88 });
 
   var d = L("العضويات");
@@ -1118,6 +1119,7 @@ function viewList(listId) {
       '<td class="c-type"><select data-f="type" aria-label="النوع">' + typeOptions(r.type) + "</select></td>" +
       '<td class="c-issuer"><input data-f="issuer" value="' + esc(r.issuer) + '" placeholder="الجهة المصدرة" aria-label="الجهة المصدرة" list="dl-issuers"></td>' +
       '<td class="c-ref"><input data-f="ref" class="mono" style="text-align:right" value="' + esc(r.ref) + '" placeholder="الرقم" aria-label="الرقم"></td>' +
+      '<td class="c-doc"><input data-f="docDate" type="date" value="' + esc(r.docDate || "") + '" aria-label="تاريخ الوثيقة"></td>' +
       '<td class="c-date">' + (r.noExpiry ? '<button class="btn ghost sm" data-act="open-rec" data-id="' + r.id + '" style="width:100%">لا ينتهي</button>' : '<input data-f="expiry" type="date" value="' + esc(r.expiry || "") + '" aria-label="تاريخ الانتهاء">') + "</td>" +
       '<td class="c-note"><input data-f="note" value="' + esc(r.note) + '" placeholder="' + NOTE_PH_LONG + '" aria-label="ملاحظة"></td>' +
       '<td class="st"><span class="pill ' + st + '">' + STATUS[st].l + "</span></td>" +
@@ -1138,7 +1140,7 @@ function viewList(listId) {
     : (!shown.length ? '<div class="empty">لا نتائج لـ «' + esc(q) + "»</div>" : "");
 
   h += '<div class="grid-wrap' + (shown.length ? " has-rows" : "") + '">' +
-    (shown.length ? '<table class="grid"><thead><tr><th></th><th>اسم الترخيص أو الشهادة أو الموعد</th><th>النوع</th><th>الجهة المصدرة</th><th>الرقم</th><th>تاريخ الانتهاء</th><th>ملاحظة</th><th>الحالة</th><th></th></tr></thead><tbody>' + rows + "</tbody></table>" +
+    (shown.length ? '<table class="grid"><thead><tr><th></th><th>اسم الترخيص أو الشهادة أو الموعد</th><th>النوع</th><th>الجهة المصدرة</th><th>الرقم</th><th>تاريخ الوثيقة</th><th>تاريخ الانتهاء</th><th>ملاحظة</th><th>الحالة</th><th></th></tr></thead><tbody>' + rows + "</tbody></table>" +
       '<ul class="mrows">' + mrows + "</ul>" +
       '<div class="grid-foot"><span>يُحفظ كل تعديل تلقائياً · Enter للانتقال إلى الصف التالي</span><span>الترتيب: الأقرب انتهاءً</span></div>' : empty) +
     "</div>";
@@ -1181,7 +1183,7 @@ function gridCommit(inp) {
   var f = inp.getAttribute("data-f"), v = inp.value;
   if ((r[f] || "") === v) return;
   if (f === "title" && !v.trim()) { inp.value = r.title; toast("اسم السجل مطلوب."); return; }
-  var ch = {}; ch[f] = f === "expiry" ? (v || null) : v;
+  var ch = {}; ch[f] = (f === "expiry" || f === "docDate") ? (v || null) : v;
   var res = updateRecord(r, ch);
   if (res === false) { inp.value = r[f] || ""; return; }
   save();
@@ -1222,6 +1224,13 @@ function updateRecord(r, ch, opts) {
       if (!window.confirm("السنة " + y + " تبدو غير معتادة. هل التاريخ صحيح؟")) return false;
     }
   }
+  if (ch.docDate) {
+    var dy = +ch.docDate.slice(0, 4), tdy = +today().slice(0, 4);
+    if ((dy < 1950 || dy > tdy + 1) && !window.confirm("سنة تاريخ الوثيقة " + dy + " تبدو غير معتادة. هل التاريخ صحيح؟")) return false;
+  }
+  var nextDoc = ch.docDate !== undefined ? ch.docDate : r.docDate;
+  var nextExp = ch.noExpiry ? null : (ch.expiry !== undefined ? ch.expiry : r.expiry);
+  if (nextDoc && nextExp && nextDoc > nextExp) { toast("تاريخ الوثيقة يجب أن يسبق تاريخ الانتهاء."); return false; }
   var oldExpiry = r.expiry;
   var before = JSON.stringify({ expiry: r.expiry, noExpiry: r.noExpiry });
   Object.keys(ch).forEach(function (k) { r[k] = ch[k]; });
@@ -1246,7 +1255,7 @@ function updateRecord(r, ch, opts) {
   return true;
 }
 function newRecord(listId, fields) {
-  var r = { id: uid("r"), listId: listId, type: "license", title: "", issuer: "", ref: "", expiry: null, noExpiry: false, note: "",
+  var r = { id: uid("r"), listId: listId, type: "license", title: "", issuer: "", ref: "", docDate: null, expiry: null, noExpiry: false, note: "",
     renewal: { state: "none" }, override: null, snoozes: [], alertLog: [], history: [], setOn: today(), createdAt: today(), updatedAt: today() };
   for (var k in fields) r[k] = fields[k];
   S.records.push(r);
@@ -1283,8 +1292,10 @@ function openRecord(id, focusField) {
   body += '<form data-form="record" class="sheet-body" style="gap:12px">' +
     '<div class="field"><label for="f-title">اسم الترخيص أو الشهادة أو الموعد</label><input class="inp" id="f-title" name="title" value="' + esc(r.title) + '" placeholder="مثال: رخصة البلدية" required maxlength="120"></div>' +
     '<div class="two-col"><div class="field"><label for="f-type">النوع</label><select class="inp" id="f-type" name="type">' + typeOptions(r.type) + "</select></div>" +
-    '<div class="field"><label for="f-ref">الرقم</label><input class="inp mono" style="text-align:right" id="f-ref" name="ref" value="' + esc(r.ref) + '" placeholder="اختياري" maxlength="60"></div></div>' +
-    '<div class="field"><label for="f-issuer">الجهة المصدرة</label><input class="inp" id="f-issuer" name="issuer" value="' + esc(r.issuer) + '" placeholder="اختياري" list="dl-issuers-sheet" maxlength="120"></div>' +
+    '<div class="field"><label for="f-issuer">الجهة المصدرة</label><input class="inp" id="f-issuer" name="issuer" value="' + esc(r.issuer) + '" placeholder="اختياري" list="dl-issuers-sheet" maxlength="120"></div></div>' +
+    '<div class="two-col"><div class="field"><label for="f-ref">رقم الوثيقة</label><input class="inp mono" style="text-align:right" id="f-ref" name="ref" value="' + esc(r.ref) + '" placeholder="اختياري" maxlength="60"></div>' +
+    '<div class="field"><label for="f-doc">تاريخ الوثيقة <span class="muted" style="font-weight:400">(اختياري)</span></label><input class="inp" id="f-doc" name="docDate" type="date" value="' + esc(r.docDate || "") + '">' +
+    '<span class="hijri" id="f-doc-hijri">' + (r.docDate ? "يوافق " + fmtHijri(r.docDate) : "تاريخ الإصدار أو آخر تجديد") + "</span></div></div>" +
     '<div class="field"><label for="f-expiry">تاريخ الانتهاء</label><input class="inp" id="f-expiry" name="expiry" type="date" value="' + esc(r.expiry || "") + '"' + (r.noExpiry ? " disabled" : "") + ">" +
     '<span class="hijri" id="f-hijri">' + (r.expiry ? "يوافق " + fmtHijri(r.expiry) : "") + "</span>" +
     '<label class="chk" style="font-size:14px"><input type="checkbox" id="f-noexp" name="noExpiry"' + (r.noExpiry ? " checked" : "") + "><span>لا ينتهي (لا يتطلب تجديداً)</span></label></div>" +
@@ -1325,7 +1336,7 @@ function openRecord(id, focusField) {
   }
   if (r.history && r.history.length) {
     body += '<div class="box"><div class="box-h"><h3>التجديدات السابقة</h3></div><ul class="timeline">' + r.history.slice().reverse().map(function (hh) {
-      return '<li class="tl"><span class="dot sent">' + icon("i-renew") + "</span><div><b>كان ينتهي " + fmtDate(hh.expiry) + "</b><small>سُجّل التجديد في " + fmtDate(hh.renewedAt) + "</small></div></li>";
+      return '<li class="tl"><span class="dot sent">' + icon("i-renew") + "</span><div><b>كان ينتهي " + fmtDate(hh.expiry) + "</b><small>" + (hh.docDate ? "وثيقة بتاريخ " + fmtDate(hh.docDate) + " · " : "") + "سُجّل التجديد في " + fmtDate(hh.renewedAt) + "</small></div></li>";
     }).join("") + "</ul></div>";
   }
   var otherLists = S.lists.filter(function (x) { return !x.deleted && x.id !== r.listId; });
@@ -1335,6 +1346,8 @@ function openRecord(id, focusField) {
   var ne = $("#f-noexp"), fe = $("#f-expiry"), fh = $("#f-hijri");
   if (ne) ne.addEventListener("change", function () { fe.disabled = ne.checked; if (ne.checked) { fe.value = ""; fh.textContent = ""; } });
   if (fe) fe.addEventListener("input", function () { fh.textContent = fe.value ? "يوافق " + fmtHijri(fe.value) : ""; });
+  var fd = $("#f-doc"), fdh = $("#f-doc-hijri");
+  if (fd) fd.addEventListener("input", function () { fdh.textContent = fd.value ? "يوافق " + fmtHijri(fd.value) : "تاريخ الإصدار أو آخر تجديد"; });
   var mv = $("[data-act-change=move]");
   if (mv) mv.addEventListener("change", function () {
     if (!mv.value) return;
@@ -1348,7 +1361,7 @@ function submitRecord(form) {
   var F = function (name) { return form.elements.namedItem(name); };
   var title = F("title").value.trim();
   if (!title) { F("title").focus(); toast("اكتب اسم الترخيص أو الشهادة أو الموعد."); return; }
-  var ch = { title: title, type: F("type").value, ref: F("ref").value.trim(), issuer: F("issuer").value.trim(), note: F("note").value.trim(), noExpiry: F("noExpiry").checked };
+  var ch = { title: title, type: F("type").value, ref: F("ref").value.trim(), docDate: F("docDate").value || null, issuer: F("issuer").value.trim(), note: F("note").value.trim(), noExpiry: F("noExpiry").checked };
   if (!ch.noExpiry) ch.expiry = F("expiry").value || null;
   var wasNew = !r.title;
   if (updateRecord(r, ch) === false) return;
@@ -1398,6 +1411,7 @@ function openRenew(id) {
   openOverlay(modal("تسجيل التجديد",
     '<form data-form="renew" data-id="' + id + '" style="display:grid;gap:12px"><p style="margin:0">أدخل تاريخ الانتهاء الجديد لـ «' + esc(r.title) + '». سنحفظ الفترة السابقة ونجدول تنبيهات الفترة الجديدة.</p>' +
     '<div class="field"><label for="rn-date">تاريخ الانتهاء الجديد</label><input class="inp" type="date" id="rn-date" name="date" value="' + suggest + '" required autofocus></div>' +
+    '<div class="field"><label for="rn-doc">تاريخ الوثيقة الجديدة <span class="muted" style="font-weight:400">(اختياري)</span></label><input class="inp" type="date" id="rn-doc" name="doc" value="' + today() + '"></div>' +
     '<div class="row"><button class="btn pri" type="submit">' + icon("i-check") + "حفظ التجديد</button><button type=\"button\" class=\"btn\" data-act=\"close\">إلغاء</button></div></form>"));
 }
 function openRequest(id) {
@@ -1569,10 +1583,10 @@ function feedbackText() {
 /* ---------------- export ---------------- */
 function csvCell(v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function exportCSV(recs, filename) {
-  var head = ["القائمة", "الاسم", "النوع", "الجهة المصدرة", "الرقم", "تاريخ الانتهاء", "التاريخ الهجري", "الحالة", "ملاحظة"];
+  var head = ["القائمة", "الاسم", "النوع", "الجهة المصدرة", "الرقم", "تاريخ الوثيقة", "تاريخ الانتهاء", "تاريخ الانتهاء (هجري)", "الحالة", "ملاحظة"];
   var lines = [head.join(",")].concat(recs.map(function (r) {
     var l = getList(r.listId), st = statusOf(r);
-    return [l ? l.name : "", r.title, typeLabel(r.type), r.issuer, r.ref, r.noExpiry ? "لا ينتهي" : (r.expiry || ""), r.expiry ? fmtHijri(r.expiry) : "", STATUS[st].l, r.note].map(csvCell).join(",");
+    return [l ? l.name : "", r.title, typeLabel(r.type), r.issuer, r.ref, r.docDate || "", r.noExpiry ? "لا ينتهي" : (r.expiry || ""), r.expiry ? fmtHijri(r.expiry) : "", STATUS[st].l, r.note].map(csvCell).join(",");
   }));
   var blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
   try {
@@ -1588,7 +1602,7 @@ function exportCSV(recs, filename) {
 var PASTE_ROWS = [];
 function openPaste(listId) {
   openOverlay(sheet("لصق صفوف من Excel",
-    '<p style="margin:0;font-size:14px">انسخ الصفوف من Excel أو Google Sheets والصقها هنا. ترتيب الأعمدة: <b>الاسم، الجهة المصدرة، الرقم، تاريخ الانتهاء، ملاحظة</b>. التاريخ بصيغة 2027-03-14 أو 14/03/2027.</p>' +
+    '<p style="margin:0;font-size:14px">انسخ الصفوف من Excel أو Google Sheets والصقها هنا. ترتيب الأعمدة: <b>الاسم، الجهة المصدرة، الرقم، تاريخ الوثيقة (اختياري)، تاريخ الانتهاء، ملاحظة</b>. إذا لم يكن لديك عمود لتاريخ الوثيقة فاتركه، وسنفهم الترتيب تلقائياً. التاريخ بصيغة 2027-03-14 أو 14/03/2027.</p>' +
     '<textarea class="inp mono" id="paste-box" style="min-height:140px;text-align:right;direction:rtl" placeholder="السجل التجاري	وزارة التجارة	1010456789	14/03/2027" autofocus></textarea>' +
     '<div id="paste-preview"></div>' +
     '<button class="btn pri" id="paste-go" data-act="paste-commit" data-id="' + listId + '" disabled>إضافة</button>'), "drawer");
@@ -1606,8 +1620,12 @@ function previewPaste(text, listId) {
   var lines = text.split(/\r?\n/).filter(function (x) { return x.trim(); });
   PASTE_ROWS = lines.map(function (line) {
     var c = line.indexOf("\t") >= 0 ? line.split("\t") : line.split(/\s{2,}|,/);
-    var row = { title: (c[0] || "").trim(), issuer: (c[1] || "").trim(), ref: (c[2] || "").trim(), rawDate: (c[3] || "").trim(), note: (c[4] || "").trim() };
+    var cell = function (k) { return (c[k] || "").trim(); };
+    var row = { title: cell(0), issuer: cell(1), ref: cell(2), docDate: null };
+    if (parseDateLoose(cell(3)) && parseDateLoose(cell(4))) { row.docDate = parseDateLoose(cell(3)); row.rawDate = cell(4); row.note = cell(5); }
+    else { row.rawDate = cell(3); row.note = cell(4); }
     row.expiry = parseDateLoose(row.rawDate);
+    if (row.docDate && row.expiry && row.docDate > row.expiry) { var tmp = row.docDate; row.docDate = row.expiry; row.expiry = tmp; row.rawDate = row.expiry; }
     row.dup = !!findDuplicate({ id: "_" }, { title: row.title, ref: row.ref, issuer: row.issuer, expiry: row.expiry });
     return row;
   }).filter(function (r) { return r.title; });
@@ -1617,7 +1635,7 @@ function previewPaste(text, listId) {
   $("#paste-preview").innerHTML = '<div class="box"><div class="box-h"><h3>معاينة (' + n(PASTE_ROWS.length) + ")</h3>" + (dups ? '<span class="pill soon">' + n(dups) + " مشابه لسجل موجود</span>" : "") + "</div>" +
     '<ul class="timeline">' + PASTE_ROWS.slice(0, 30).map(function (r) {
       return '<li class="tl"><span class="dot ' + (r.expiry ? "sent" : "skipped") + '">' + icon(r.expiry ? "i-check" : "i-alert") + "</span><div><b>" + esc(r.title) + (r.dup ? ' <span class="pill soon">مشابه</span>' : "") + "</b><small>" +
-        esc([r.issuer, r.ref].filter(Boolean).join(" · ")) + " · " + (r.expiry ? fmtDate(r.expiry) : (r.rawDate ? "تاريخ غير مفهوم: " + esc(r.rawDate) : "دون تاريخ")) + "</small></div></li>";
+        esc([r.issuer, r.ref].filter(Boolean).join(" · ")) + (r.docDate ? " · وثيقة " + fmtDate(r.docDate, true) : "") + " · " + (r.expiry ? "تنتهي " + fmtDate(r.expiry) : (r.rawDate ? "تاريخ غير مفهوم: " + esc(r.rawDate) : "دون تاريخ")) + "</small></div></li>";
     }).join("") + "</ul></div>";
   go.disabled = false;
   go.textContent = "إضافة " + records(PASTE_ROWS.length);
@@ -1743,7 +1761,7 @@ var ACTIONS = {
   "paste": function (el) { openPaste(el.getAttribute("data-id")); },
   "paste-commit": function (el) {
     var listId = el.getAttribute("data-id");
-    PASTE_ROWS.forEach(function (row) { newRecord(listId, { title: row.title.slice(0, 120), issuer: row.issuer, ref: row.ref, expiry: row.expiry, note: row.note }); });
+    PASTE_ROWS.forEach(function (row) { newRecord(listId, { title: row.title.slice(0, 120), issuer: row.issuer, ref: row.ref, docDate: row.docDate, expiry: row.expiry, note: row.note }); });
     var k = PASTE_ROWS.length; PASTE_ROWS = [];
     runEngine(); save(); closeOverlays(); rerender(); toast("أُضيف " + records(k));
   },
@@ -1790,8 +1808,11 @@ var FORMS = {
     var r = getRec(f.getAttribute("data-id")), d = f.elements.namedItem("date").value;
     if (!d) return;
     if (r.expiry && d <= r.expiry) { toast("التاريخ الجديد يجب أن يكون بعد " + fmtDate(r.expiry)); return; }
+    var nd = f.elements.namedItem("doc").value || null;
+    if (nd && nd > d) { toast("تاريخ الوثيقة يجب أن يسبق تاريخ الانتهاء."); return; }
     r.history = r.history || [];
-    if (r.expiry) r.history.push({ expiry: r.expiry, renewedAt: today() });
+    if (r.expiry) r.history.push({ expiry: r.expiry, docDate: r.docDate || null, renewedAt: today() });
+    r.docDate = nd;
     r.expiry = d; r.setOn = today(); r.snoozes = []; r.renewal = { state: "none" }; r.updatedAt = today();
     runEngine(); save(); rerender(); openRecord(r.id);
     toast("سُجّل التجديد. التنبيه الأول في " + fmtDate(addDays(d, -alertCfg(r).firstDays), true));
