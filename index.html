@@ -461,7 +461,9 @@ table.grid tr.flash td{animation:flash 1.2s ease-out}
 /* =========================================================
    صلاحية — نموذج أولي. كل البيانات تُحفظ في متصفح هذا الجهاز.
    ========================================================= */
-var STORE_KEY = "salahiya_proto_v1";
+var LEGACY_KEY = "salahiya_proto_v1";
+var STORE_PREFIX = "salahiya_acct_v1:";
+var SESSION_KEY = "salahiya_session_v1";
 var DAY = 86400000;
 var POLICY_VERSION = "0.1-proto";
 
@@ -551,21 +553,53 @@ function blankState() {
     theme: null
   };
 }
-function load() {
-  var raw = null;
-  try { raw = localStorage.getItem(STORE_KEY); } catch (e) {}
-  if (!raw) return blankState();
+function accountId(email) { return String(email == null ? "" : email).trim().toLowerCase(); }
+function accountKey(email) { return STORE_PREFIX + accountId(email); }
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+function currentAccount() { return lsGet(SESSION_KEY); }
+function setCurrentAccount(email) { if (email) lsSet(SESSION_KEY, accountId(email)); else lsDel(SESSION_KEY); }
+
+/* every account gets its own store; nothing is ever read across accounts */
+function loadAccount(email) {
+  var id = accountId(email);
+  if (!id) return null;
+  var raw = lsGet(accountKey(id));
+  if (!raw) return null;
   try {
     var st = JSON.parse(raw);
+    if (!st || !st.user || accountId(st.user.email) !== id) return null;
     var b = blankState();
     for (var k in b) if (!(k in st)) st[k] = b[k];
     return st;
-  } catch (e) { return blankState(); }
+  } catch (e) { return null; }
+}
+/* one-off move of the old single-store data into its owner's account */
+function migrateLegacy() {
+  var raw = lsGet(LEGACY_KEY);
+  if (!raw) return;
+  lsDel(LEGACY_KEY);
+  try {
+    var st = JSON.parse(raw);
+    if (st && st.user && st.user.email) {
+      var key = accountKey(st.user.email);
+      if (!lsGet(key)) lsSet(key, JSON.stringify(st));
+      if (!currentAccount()) setCurrentAccount(st.user.email);
+    }
+  } catch (e) {}
+}
+function load() {
+  migrateLegacy();
+  var id = currentAccount();
+  if (!id) return blankState();
+  return loadAccount(id) || blankState();
 }
 var storageOk = true;
 function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); storageOk = true; }
-  catch (e) { storageOk = false; }
+  /* a signed-out session owns no data, so it writes nothing */
+  if (!S || !S.user || !S.user.email) return;
+  storageOk = lsSet(accountKey(S.user.email), JSON.stringify(S));
 }
 function today() { return addDays(realTodayStr(), S.offset || 0); }
 
@@ -834,7 +868,7 @@ function viewLogin() {
       '<div class="field"><label for="login-email">البريد الإلكتروني</label><input class="inp mono" style="text-align:right" id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="name@company.com" value="' + esc(L.email) + '" required></div>' +
       '<p class="err" id="login-err" hidden></p>' +
       '<button class="btn pri block" type="submit">أرسل رمز الدخول</button>' +
-      '<p class="proto-tag">نسخة تجريبية للاختبار: لا تُرسل رسائل حقيقية، وتُحفظ البيانات على هذا الجهاز فقط.</p>' +
+      '<p class="proto-tag">نسخة تجريبية للاختبار: لا تُرسل رسائل حقيقية. لكل حساب بياناته المنفصلة على هذا الجهاز، ولا تظهر سجلاتك لأي حساب آخر. على جهاز مشترك سجّل الخروج بعد الاستخدام.</p>' +
       "</form></div>";
   }
   var boxes = "";
@@ -885,10 +919,13 @@ function submitCode() {
     var er = $("#login-err"); er.textContent = "الرمز غير صحيح. تحقق من الأرقام وحاول مجدداً."; er.hidden = false;
     return;
   }
-  var prev = S.user && S.user.email;
-  if (prev && prev !== UI.login.email) S = blankState();
-  S.user = { email: UI.login.email, name: UI.login.email.split("@")[0], since: today() };
+  var email = accountId(UI.login.email);
+  S = loadAccount(email) || blankState();
+  if (!S.user) S.user = { email: email, name: email.split("@")[0], since: today() };
+  setCurrentAccount(email);
   UI.login = { step: "email", email: "", code: "" };
+  UI.filter = null; UI.search = ""; UI.showArchived = false;
+  runEngine();
   save(); render();
 }
 
@@ -902,6 +939,7 @@ function viewConsent() {
     "<li>" + icon("i-check") + "<span>نستخدم البيانات لإرسال تنبيهاتك، ولا نبيعها.</span></li>" +
     "<li>" + icon("i-check") + "<span>يمكنك تصدير بياناتك أو حذفها في أي وقت.</span></li>" +
     "<li>" + icon("i-check") + "<span>لا تُدخل أرقام هوية أو معلومات صحية في الملاحظات.</span></li>" +
+    "<li>" + icon("i-check") + "<span>سجلاتك خاصة بحسابك وحده: لا يراها مستخدم آخر ولا مشرف النظام.</span></li>" +
     "<li>" + icon("i-check") + "<span>التنبيه تذكير فقط، والتحقق من الجهة المصدرة مسؤوليتك.</span></li>" +
     "</ul>" +
     '<p style="margin:0;font-size:14px"><button type="button" class="btn ghost sm" data-act="policy">اقرأ سياسة الخصوصية والشروط كاملة</button></p>' +
@@ -1541,7 +1579,7 @@ function openMenu() {
     (S.records.length ? "" : '<li><button data-act="seed">' + icon("i-fast") + "تعبئة ببيانات شركة نموذجية</button></li>") +
     '<li><button data-act="wipe" style="color:var(--exp)">' + icon("i-trash") + "<span>حذف كل بياناتي<small>من هذا الجهاز</small></span></button></li>" +
     '<li><button data-act="logout">' + icon("i-out") + "تسجيل الخروج</button></li></ul>" +
-    '<p class="proto-tag">نسخة تجريبية · البيانات محفوظة على هذا الجهاز فقط' + (storageOk ? "" : " · تعذّر الحفظ في هذا المتصفح (وضع التصفح الخاص؟)") + "</p>";
+    '<p class="proto-tag">نسخة تجريبية · بيانات هذا الحساب محفوظة على هذا الجهاز وحده' + (storageOk ? "" : " · تعذّر الحفظ في هذا المتصفح (وضع التصفح الخاص؟)") + "</p>";
   openOverlay(sheet("القائمة", body), "drawer");
 }
 function openTime() {
@@ -1558,7 +1596,9 @@ function openPolicy() {
     "<div><b>ما نجمعه:</b> بريدك الإلكتروني، والبيانات التي تُدخلها في قوائمك، وإعدادات التنبيه.</div>" +
     "<div><b>لماذا:</b> لتشغيل حسابك وإرسال التنبيهات التي طلبتها. لا نبيع بياناتك ولا نشاركها لأغراض تسويقية.</div>" +
     "<div><b>حقوقك:</b> الاطلاع على بياناتك، وتصديرها، وتصحيحها، وحذفها، وسحب موافقتك في أي وقت.</div>" +
-    "<div><b>في هذه النسخة التجريبية:</b> تُحفظ البيانات في متصفح جهازك فقط، ولا تُرسل إلى أي خادم.</div>" +
+    "<div><b>عزل الحسابات:</b> كل حساب معزول تماماً عن غيره. سجلاتك وقوائمك وتنبيهاتك مرتبطة بحسابك وحده، ولا تظهر لأي مستخدم آخر.</div>" +
+    "<div><b>صلاحيات المشرف:</b> مشرف النظام لا يطّلع على سجلاتك ولا قوائمك. صلاحياته إدارية فقط: إنشاء الحسابات وتعطيلها والدعم الفني، دون قراءة محتوى أي حساب.</div>" +
+    "<div><b>في هذه النسخة التجريبية:</b> تُحفظ بيانات كل حساب في متصفح جهازك وحده، ولا تُرسل إلى أي خادم. وعلى جهاز مشترك، سجّل الخروج بعد الاستخدام.</div>" +
     "<div><b>طبيعة الخدمة:</b> «صلاحية» أداة تنظيمية للتذكير تعتمد على البيانات التي تُدخلها. لا تقدم استشارة قانونية أو نظامية، ولا تتحقق من سريان الوثائق لدى الجهات المصدرة، ولا تضمن الامتثال لأي نظام.</div>" +
     "<div><b>مسؤولية المستخدم:</b> دقة البيانات وتحديثها، والتحقق من مواعيد التجديد ومتطلباته لدى الجهات المختصة، واتخاذ إجراءات التجديد في وقتها.</div>" +
     "<div><b>التنبيهات:</b> نبذل عناية معقولة لإرسالها في مواعيدها، دون ضمان وصولها أو توقيته، وهي ليست بديلاً عن متابعتك بنفسك.</div>" +
@@ -1766,11 +1806,18 @@ var ACTIONS = {
     runEngine(); save(); closeOverlays(); rerender(); toast("أُضيف " + records(k));
   },
   wipe: function () {
-    if (!window.confirm("سيُحذف كل ما أدخلته على هذا الجهاز نهائياً. متابعة؟")) return;
-    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
-    S = blankState(); UI.filter = null; closeOverlays(); go("#/"); render();
+    if (!window.confirm("سيُحذف كل ما أدخلته في حساب " + (S.user ? S.user.email : "") + " من هذا الجهاز نهائياً. متابعة؟")) return;
+    if (S.user) lsDel(accountKey(S.user.email));
+    setCurrentAccount(null);
+    S = blankState(); UI.filter = null; UI.search = ""; closeOverlays(); go("#/"); render();
   },
-  logout: function () { S.user = null; save(); closeOverlays(); go("#/"); render(); }
+  logout: function () {
+    save();                       /* flush this account, then let go of it */
+    setCurrentAccount(null);
+    S = blankState();
+    UI.filter = null; UI.search = ""; UI.showArchived = false;
+    closeOverlays(); go("#/"); render();
+  }
 };
 
 /* ---------------- forms ---------------- */
@@ -1871,7 +1918,12 @@ document.addEventListener("change", function (ev) {
   if (ev.target.id === "c1" || ev.target.id === "c2") { var b = $("#consent-go"); if (b) b.disabled = !($("#c1").checked && $("#c2").checked); }
 });
 window.addEventListener("hashchange", function () { if (location.hash === RENDERED_HASH) return; UI.filter = null; render(); window.scrollTo(0, 0); });
-window.addEventListener("storage", function (ev) { if (ev.key === STORE_KEY) { S = load(); applyTheme(); render(); } });
+window.addEventListener("storage", function (ev) {
+  if (!ev.key) return;
+  var mine = S && S.user ? accountKey(S.user.email) : null;
+  if (ev.key !== SESSION_KEY && ev.key !== mine) return;   /* another account's store is none of our business */
+  S = load(); applyTheme(); render();
+});
 document.addEventListener("visibilitychange", function () { if (!document.hidden && S && S.user) { if (runEngine()) { save(); rerender(); } } });
 
 /* ---------------- boot ---------------- */
