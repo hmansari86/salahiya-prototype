@@ -202,6 +202,19 @@ main{max-width:1120px;margin:0 auto;padding:18px 16px calc(40px + var(--bot))}
 .list-head h1{font-size:clamp(20px,4.6vw,25px);flex:1;min-width:0}
 .list-head .meta{width:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--ink3)}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.drop{display:grid;justify-items:center;gap:6px;padding:20px 16px;border:2px dashed var(--line);border-radius:14px;background:var(--surface);text-align:center;cursor:pointer;color:var(--ink2)}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.drop .ic{width:26px;height:26px}
+.drop b{font-size:15px;color:var(--ink)}
+.drop.over b,.drop:hover b{color:var(--accent)}
+.drop small{font-size:12.5px;color:var(--ink3)}
+.map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px}
+.map-grid label{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--ink2)}
+.map-grid select{min-height:42px;font-size:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:6px 8px;width:100%}
+.map-grid .req{color:var(--exp)}
+details.paste-alt{border-top:1px solid var(--line2);padding-top:10px}
+details.paste-alt summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent);list-style:none}
+details.paste-alt summary::-webkit-details-marker{display:none}
 .search{position:relative;flex:1;min-width:180px}
 .search .ic{position:absolute;top:50%;inset-inline-start:12px;transform:translateY(-50%);color:var(--ink3)}
 .search input{padding-inline-start:38px;min-height:42px}
@@ -438,6 +451,8 @@ table.grid tr.flash td{animation:flash 1.2s ease-out}
   <symbol id="i-dots" viewBox="0 0 24 24"><path d="M12 6h.01M12 12h.01M12 18h.01" stroke-width="3"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10 9v6M14 9v6"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 20V8M7.5 12.5L12 8l4.5 4.5"/><path d="M4 4h16"/><path d="M4 20h3M17 20h3"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9.5h16M4 15h16M9.5 4v16"/></symbol>
   <symbol id="i-paste" viewBox="0 0 24 24"><rect x="6" y="5" width="12" height="16" rx="2"/><path d="M9 5V3.5h6V5M9 11h6M9 15h4"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
@@ -1147,7 +1162,7 @@ function viewList(listId) {
     '<button class="icon-btn" data-act="list-menu" data-id="' + l.id + '" aria-label="خيارات القائمة">' + icon("i-dots") + "</button>" +
     '<div class="meta">' + meta + "</div></div>";
   h += '<div class="toolbar"><label class="search"><span class="sr">بحث</span>' + icon("i-search") + '<input class="inp" id="list-search" type="search" placeholder="ابحث بالاسم أو الرقم أو الجهة" value="' + esc(UI.search) + '"></label>' +
-    '<button class="btn" data-act="paste" data-id="' + l.id + '">' + icon("i-paste") + "لصق من Excel</button></div>";
+    '<button class="btn" data-act="import" data-id="' + l.id + '">' + icon("i-upload") + "استيراد من Excel</button></div>";
 
   var rows = shown.map(function (r, i) {
     var st = statusOf(r);
@@ -1427,6 +1442,7 @@ function openListMenu(id) {
   openOverlay(sheet("خيارات القائمة",
     '<ul class="menu-list">' +
     '<li><button data-act="rename-list" data-id="' + id + '">' + icon("i-edit") + "إعادة التسمية</button></li>" +
+    '<li><button data-act="import" data-id="' + id + '">' + icon("i-upload") + "<span>استيراد من Excel<small>ارفع ملفاً من جهازك أو الصق الصفوف</small></span></button></li>" +
     '<li><button data-act="export-list" data-id="' + id + '">' + icon("i-down") + "تصدير CSV</button></li>" +
     '<li><button data-act="archive-list" data-id="' + id + '">' + icon("i-archive") + "<span>أرشفة<small>تُخفى القائمة وتتوقف تنبيهاتها</small></span></button></li>" +
     '<li><button data-act="delete-list" data-id="' + id + '" style="color:var(--exp)">' + icon("i-trash") + "حذف القائمة</button></li></ul>", "", esc(l.name)));
@@ -1639,46 +1655,223 @@ function exportCSV(recs, filename) {
 }
 
 /* ---------------- paste from Excel ---------------- */
-var PASTE_ROWS = [];
-function openPaste(listId) {
-  openOverlay(sheet("لصق صفوف من Excel",
-    '<p style="margin:0;font-size:14px">انسخ الصفوف من Excel أو Google Sheets والصقها هنا. ترتيب الأعمدة: <b>الاسم، الجهة المصدرة، الرقم، تاريخ الوثيقة (اختياري)، تاريخ الانتهاء، ملاحظة</b>. إذا لم يكن لديك عمود لتاريخ الوثيقة فاتركه، وسنفهم الترتيب تلقائياً. التاريخ بصيغة 2027-03-14 أو 14/03/2027.</p>' +
-    '<textarea class="inp mono" id="paste-box" style="min-height:140px;text-align:right;direction:rtl" placeholder="السجل التجاري	وزارة التجارة	1010456789	14/03/2027" autofocus></textarea>' +
-    '<div id="paste-preview"></div>' +
-    '<button class="btn pri" id="paste-go" data-act="paste-commit" data-id="' + listId + '" disabled>إضافة</button>'), "drawer");
-  var box = $("#paste-box");
-  box.addEventListener("input", function () { previewPaste(box.value, listId); });
-}
-function parseDateLoose(s) {
-  s = String(s || "").trim().replace(/[٠-٩]/g, function (c) { return String("٠١٢٣٤٥٦٧٨٩".indexOf(c)); });
+var IMPORT_FIELDS = [
+  { k: "title", l: "الاسم", req: true },
+  { k: "issuer", l: "الجهة المصدرة" },
+  { k: "ref", l: "الرقم" },
+  { k: "docDate", l: "تاريخ الوثيقة" },
+  { k: "expiry", l: "تاريخ الانتهاء" },
+  { k: "note", l: "ملاحظة" }
+];
+var IMP = { listId: null, grid: [], header: false, map: {}, rows: [], source: "" };
+
+function parseDateLoose(v) {
+  if (v instanceof Date && !isNaN(v)) return v.getFullYear() + "-" + pad(v.getMonth() + 1) + "-" + pad(v.getDate());
+  var t = String(v == null ? "" : v).trim().replace(/[٠-٩]/g, function (c) { return String("٠١٢٣٤٥٦٧٨٩".indexOf(c)); });
   var m;
-  if ((m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(s))) return m[1] + "-" + pad(+m[2]) + "-" + pad(+m[3]);
-  if ((m = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/.exec(s))) return m[3] + "-" + pad(+m[2]) + "-" + pad(+m[1]);
+  if ((m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(t))) return m[1] + "-" + pad(+m[2]) + "-" + pad(+m[3]);
+  if ((m = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/.exec(t))) return m[3] + "-" + pad(+m[2]) + "-" + pad(+m[1]);
   return null;
 }
-function previewPaste(text, listId) {
+function cellText(v) {
+  if (v == null) return "";
+  if (v instanceof Date && !isNaN(v)) return parseDateLoose(v);
+  return String(v).trim();
+}
+/* split one delimited line, honouring "quoted, cells" */
+function splitLine(line, delim) {
+  var out = [], cur = "", q = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (q) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') q = false;
+      else cur += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === delim) { out.push(cur); cur = ""; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out.map(function (x) { return x.trim(); });
+}
+function parseDelimited(text) {
+  text = String(text || "").replace(/^\uFEFF/, "");
   var lines = text.split(/\r?\n/).filter(function (x) { return x.trim(); });
-  PASTE_ROWS = lines.map(function (line) {
-    var c = line.indexOf("\t") >= 0 ? line.split("\t") : line.split(/\s{2,}|,/);
-    var cell = function (k) { return (c[k] || "").trim(); };
-    var row = { title: cell(0), issuer: cell(1), ref: cell(2), docDate: null };
-    if (parseDateLoose(cell(3)) && parseDateLoose(cell(4))) { row.docDate = parseDateLoose(cell(3)); row.rawDate = cell(4); row.note = cell(5); }
-    else { row.rawDate = cell(3); row.note = cell(4); }
-    row.expiry = parseDateLoose(row.rawDate);
-    if (row.docDate && row.expiry && row.docDate > row.expiry) { var tmp = row.docDate; row.docDate = row.expiry; row.expiry = tmp; row.rawDate = row.expiry; }
-    row.dup = !!findDuplicate({ id: "_" }, { title: row.title, ref: row.ref, issuer: row.issuer, expiry: row.expiry });
-    return row;
+  if (!lines.length) return [];
+  var head = lines[0];
+  var delim = head.indexOf("\t") >= 0 ? "\t" : (head.split(";").length > head.split(",").length ? ";" : ",");
+  return lines.map(function (l) { return splitLine(l, delim); });
+}
+function looksLikeHeader(row) {
+  if (!row) return false;
+  var joined = row.join(" ").toLowerCase();
+  var words = /(اسم|الجهة|جهة|رقم|تاريخ|ملاحظ|name|title|issuer|number|date|expiry|note)/;
+  var anyDate = row.some(function (c) { return parseDateLoose(c); });
+  return words.test(joined) && !anyDate;
+}
+function autoMap(grid, header) {
+  var map = { title: null, issuer: null, ref: null, docDate: null, expiry: null, note: null };
+  var taken = {};
+  function take(k, i) { if (map[k] == null && !taken[i]) { map[k] = i; taken[i] = 1; } }
+  if (header && grid.length) {
+    grid[0].forEach(function (c, i) {
+      var t = String(c || "").toLowerCase();
+      if (/(ملاحظ|note|comment|remark)/.test(t)) take("note", i);
+      else if (/(انتهاء|نهاية|expiry|expire|expiration|valid|end)/.test(t)) take("expiry", i);
+      else if (/(إصدار|اصدار|وثيقة|issue|issued|doc)/.test(t) && /(تاريخ|date)/.test(t)) take("docDate", i);
+      else if (/(رقم|number|no\b|ref)/.test(t)) take("ref", i);
+      else if (/(جهة|مصدر|issuer|authority|source)/.test(t)) take("issuer", i);
+      else if (/(اسم|الترخيص|الشهادة|البيان|name|title)/.test(t)) take("title", i);
+    });
+    if (map.expiry == null) grid[0].forEach(function (c, i) { if (/(تاريخ|date)/.test(String(c).toLowerCase())) take("expiry", i); });
+    if (map.title == null) grid[0].forEach(function (c, i) { take("title", i); });
+    return map;
+  }
+  /* no header: fall back to the documented column order, detecting the optional document-date column */
+  var body = grid[0] || [];
+  var twoDates = parseDateLoose(body[3]) && parseDateLoose(body[4]);
+  map.title = 0; map.issuer = 1; map.ref = 2;
+  if (twoDates) { map.docDate = 3; map.expiry = 4; map.note = 5; }
+  else { map.expiry = 3; map.note = 4; }
+  return map;
+}
+function buildImportRows() {
+  var grid = IMP.grid.slice(IMP.header ? 1 : 0), m = IMP.map;
+  var at = function (row, k) { return m[k] == null ? "" : cellText(row[m[k]]); };
+  IMP.rows = grid.map(function (row) {
+    var r = { title: at(row, "title").slice(0, 120), issuer: at(row, "issuer"), ref: at(row, "ref"), note: at(row, "note") };
+    r.docDate = parseDateLoose(at(row, "docDate"));
+    r.rawDate = at(row, "expiry");
+    r.expiry = parseDateLoose(r.rawDate);
+    if (r.docDate && r.expiry && r.docDate > r.expiry) { var t = r.docDate; r.docDate = r.expiry; r.expiry = t; }
+    r.dup = !!findDuplicate({ id: "_" }, { title: r.title, ref: r.ref, issuer: r.issuer, expiry: r.expiry });
+    return r;
   }).filter(function (r) { return r.title; });
-  var go = $("#paste-go");
-  if (!PASTE_ROWS.length) { $("#paste-preview").innerHTML = ""; go.disabled = true; go.textContent = "إضافة"; return; }
-  var dups = PASTE_ROWS.filter(function (r) { return r.dup; }).length;
-  $("#paste-preview").innerHTML = '<div class="box"><div class="box-h"><h3>معاينة (' + n(PASTE_ROWS.length) + ")</h3>" + (dups ? '<span class="pill soon">' + n(dups) + " مشابه لسجل موجود</span>" : "") + "</div>" +
-    '<ul class="timeline">' + PASTE_ROWS.slice(0, 30).map(function (r) {
+  return IMP.rows;
+}
+function colOptions(sel) {
+  var first = IMP.grid[0] || [];
+  var opts = '<option value="">— تجاهل —</option>';
+  for (var i = 0; i < first.length; i++) {
+    var sample = IMP.header ? String(first[i] || "") : cellText(first[i]);
+    opts += '<option value="' + i + '"' + (sel === i ? " selected" : "") + ">" + esc("العمود " + n(i + 1) + (sample ? ": " + sample.slice(0, 22) : "")) + "</option>";
+  }
+  return opts;
+}
+function renderImport() {
+  var wrap = $("#imp-map"), prev = $("#imp-preview"), go = $("#imp-go");
+  if (!wrap) return;
+  if (!IMP.grid.length) { wrap.hidden = true; prev.innerHTML = ""; go.disabled = true; go.textContent = "إضافة"; return; }
+  wrap.hidden = false;
+  wrap.innerHTML = '<label class="chk" style="font-size:14px"><input type="checkbox" id="imp-header"' + (IMP.header ? " checked" : "") + "><span>الصف الأول عناوين أعمدة</span></label>" +
+    '<div class="map-grid" style="margin-top:8px">' + IMPORT_FIELDS.map(function (f) {
+      return "<label>" + esc(f.l) + (f.req ? ' <span class="req">*</span>' : "") +
+        '<select data-map="' + f.k + '">' + colOptions(IMP.map[f.k]) + "</select></label>";
+    }).join("") + "</div>";
+  $("#imp-header").addEventListener("change", function (ev) { IMP.header = ev.target.checked; IMP.map = autoMap(IMP.grid, IMP.header); renderImport(); });
+  $all("[data-map]", wrap).forEach(function (selEl) {
+    selEl.addEventListener("change", function () {
+      IMP.map[selEl.getAttribute("data-map")] = selEl.value === "" ? null : +selEl.value;
+      renderImport();
+    });
+  });
+  var rows = buildImportRows();
+  if (!rows.length) {
+    prev.innerHTML = '<p class="err" style="margin:0">لم نجد صفوفاً صالحة. تأكد من عمود الاسم.</p>';
+    go.disabled = true; go.textContent = "إضافة"; return;
+  }
+  var dups = rows.filter(function (r) { return r.dup; }).length;
+  var noDate = rows.filter(function (r) { return !r.expiry; }).length;
+  prev.innerHTML = '<div class="box"><div class="box-h"><h3>معاينة (' + n(rows.length) + ")</h3>" +
+    (dups ? '<span class="pill soon">' + n(dups) + " مشابه لسجل موجود</span>" : "") + "</div>" +
+    (noDate ? '<p class="hint" style="margin:0 0 6px">' + records(noDate) + " دون تاريخ انتهاء، ستُحفظ بحالة «ناقص التاريخ».</p>" : "") +
+    '<ul class="timeline">' + rows.slice(0, 30).map(function (r) {
       return '<li class="tl"><span class="dot ' + (r.expiry ? "sent" : "skipped") + '">' + icon(r.expiry ? "i-check" : "i-alert") + "</span><div><b>" + esc(r.title) + (r.dup ? ' <span class="pill soon">مشابه</span>' : "") + "</b><small>" +
-        esc([r.issuer, r.ref].filter(Boolean).join(" · ")) + (r.docDate ? " · وثيقة " + fmtDate(r.docDate, true) : "") + " · " + (r.expiry ? "تنتهي " + fmtDate(r.expiry) : (r.rawDate ? "تاريخ غير مفهوم: " + esc(r.rawDate) : "دون تاريخ")) + "</small></div></li>";
-    }).join("") + "</ul></div>";
+        esc([r.issuer, r.ref].filter(Boolean).join(" · ")) + (r.docDate ? " · وثيقة " + fmtDate(r.docDate, true) : "") + " · " +
+        (r.expiry ? "تنتهي " + fmtDate(r.expiry) : (r.rawDate ? "تاريخ غير مفهوم: " + esc(r.rawDate) : "دون تاريخ")) + "</small></div></li>";
+    }).join("") + "</ul>" + (rows.length > 30 ? '<p class="hint" style="margin:6px 0 0">وبقية الصفوف (' + n(rows.length - 30) + ").</p>" : "") + "</div>";
   go.disabled = false;
-  go.textContent = "إضافة " + records(PASTE_ROWS.length);
+  go.textContent = "إضافة " + records(rows.length);
+}
+function setImportGrid(grid, source) {
+  grid = (grid || []).filter(function (row) { return row && row.some(function (c) { return cellText(c) !== ""; }); });
+  IMP.grid = grid; IMP.source = source || "";
+  IMP.header = looksLikeHeader(grid[0]);
+  IMP.map = autoMap(grid, IMP.header);
+  var st = $("#imp-status");
+  if (st) st.innerHTML = grid.length
+    ? icon("i-check") + esc(source ? source + " · " : "") + "قرأنا " + records(grid.length - (IMP.header ? 1 : 0))
+    : '<span class="err">لم نجد صفوفاً في الملف.</span>';
+  renderImport();
+}
+/* SheetJS is fetched only when an .xlsx file is actually picked */
+function withXLSX(cb) {
+  if (window.XLSX) return cb(null, window.XLSX);
+  var sc = document.createElement("script");
+  sc.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  sc.onload = function () { window.XLSX ? cb(null, window.XLSX) : cb(new Error("no XLSX")); };
+  sc.onerror = function () { cb(new Error("load failed")); };
+  document.head.appendChild(sc);
+}
+function readImportFile(file) {
+  if (!file) return;
+  var st = $("#imp-status");
+  var name = file.name || "ملف";
+  if (st) st.innerHTML = "جارٍ قراءة " + esc(name) + "…";
+  var isCsv = /\.(csv|txt|tsv)$/i.test(name) || /text\/(csv|plain|tab)/.test(file.type || "");
+  var fr = new FileReader();
+  fr.onerror = function () { if (st) st.innerHTML = '<span class="err">تعذّرت قراءة الملف.</span>'; };
+  if (isCsv) {
+    fr.onload = function () { setImportGrid(parseDelimited(String(fr.result)), name); };
+    fr.readAsText(file, "UTF-8");
+    return;
+  }
+  fr.onload = function () {
+    var buf = fr.result;
+    withXLSX(function (err, XLSX) {
+      if (err) {
+        if (st) st.innerHTML = '<span class="err">تعذّر تحميل قارئ ملفات Excel. احفظ الملف بصيغة CSV وأعد المحاولة، أو الصق الصفوف في الأسفل.</span>';
+        return;
+      }
+      try {
+        var wb = XLSX.read(new Uint8Array(buf), { type: "array", cellDates: true });
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var grid = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: "" });
+        setImportGrid(grid, name + (wb.SheetNames.length > 1 ? " · الورقة: " + wb.SheetNames[0] : ""));
+      } catch (e) {
+        if (st) st.innerHTML = '<span class="err">تعذّر فهم الملف. تأكد أنه ملف Excel صالح، أو احفظه بصيغة CSV.</span>';
+      }
+    });
+  };
+  fr.readAsArrayBuffer(file);
+}
+function openImport(listId) {
+  IMP = { listId: listId, grid: [], header: false, map: {}, rows: [], source: "" };
+  openOverlay(sheet("استيراد من Excel",
+    '<label class="drop" id="imp-drop" for="imp-file">' + icon("i-upload") +
+    "<b>اختر ملفاً من جهازك</b><small>Excel ‏(xlsx. أو xls.) أو CSV · أو اسحب الملف إلى هنا</small></label>" +
+    '<input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.tsv,.txt,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="position:absolute;width:1px;height:1px;opacity:0">' +
+    '<p class="hint" id="imp-status" style="margin:0;display:flex;gap:6px;align-items:center"></p>' +
+    '<div id="imp-map" hidden></div>' +
+    '<div id="imp-preview"></div>' +
+    '<button class="btn pri block" id="imp-go" data-act="import-commit" data-id="' + listId + '" disabled>إضافة</button>' +
+    '<details class="paste-alt"><summary>' + icon("i-paste") + " أو الصق الصفوف مباشرة</summary>" +
+    '<p class="hint" style="margin:8px 0">انسخ الصفوف من Excel أو Google Sheets والصقها هنا. الترتيب المتوقع: الاسم، الجهة المصدرة، الرقم، تاريخ الوثيقة (اختياري)، تاريخ الانتهاء، ملاحظة. ويمكنك تعديل ربط الأعمدة بعد اللصق.</p>' +
+    '<textarea class="inp mono" id="paste-box" style="min-height:120px;text-align:right;direction:rtl" placeholder="السجل التجاري\tوزارة التجارة\t1010456789\t14/03/2027"></textarea></details>'), "drawer");
+  var fileInput = $("#imp-file"), drop = $("#imp-drop");
+  fileInput.addEventListener("change", function () { readImportFile(fileInput.files && fileInput.files[0]); });
+  ["dragenter", "dragover"].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("over"); });
+  });
+  drop.addEventListener("drop", function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) readImportFile(f);
+  });
+  var box = $("#paste-box");
+  box.addEventListener("input", function () { setImportGrid(parseDelimited(box.value), "نص ملصوق"); });
 }
 
 /* ---------------- actions ---------------- */
@@ -1798,12 +1991,15 @@ var ACTIONS = {
   theme: function () {
     S.theme = S.theme === null ? "dark" : S.theme === "dark" ? "light" : null; applyTheme(); save(); openMenu();
   },
-  "paste": function (el) { openPaste(el.getAttribute("data-id")); },
-  "paste-commit": function (el) {
-    var listId = el.getAttribute("data-id");
-    PASTE_ROWS.forEach(function (row) { newRecord(listId, { title: row.title.slice(0, 120), issuer: row.issuer, ref: row.ref, docDate: row.docDate, expiry: row.expiry, note: row.note }); });
-    var k = PASTE_ROWS.length; PASTE_ROWS = [];
-    runEngine(); save(); closeOverlays(); rerender(); toast("أُضيف " + records(k));
+  "import": function (el) { openImport(el.getAttribute("data-id")); },
+  "import-commit": function (el) {
+    var listId = el.getAttribute("data-id"), rows = IMP.rows.slice(0, 500);
+    if (!rows.length) return;
+    rows.forEach(function (row) { newRecord(listId, { title: row.title, issuer: row.issuer, ref: row.ref, docDate: row.docDate, expiry: row.expiry, note: row.note }); });
+    var extra = IMP.rows.length - rows.length;
+    IMP.rows = []; IMP.grid = [];
+    runEngine(); save(); closeOverlays(); rerender();
+    toast("أُضيف " + records(rows.length) + (extra ? " · تخطّينا " + records(extra) + " فوق الحد" : ""));
   },
   wipe: function () {
     if (!window.confirm("سيُحذف كل ما أدخلته في حساب " + (S.user ? S.user.email : "") + " من هذا الجهاز نهائياً. متابعة؟")) return;
